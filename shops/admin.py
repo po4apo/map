@@ -7,11 +7,14 @@ class AdminCity(admin.ModelAdmin):
 
 
 class AdminStreet(admin.ModelAdmin):
-    list_display = ('name', 'city')
+    list_display = ('name', 'city', )
+    list_filter = ('city', )
 
 
 class AdminShop(admin.ModelAdmin):
-    list_display = ('name', 'num_of_house', 'opening_time', 'closing_time', 'city', 'street')
+    list_display = ('name', 'num_of_house', 'opening_time', 'closing_time', 'city', 'street', )
+    list_filter = ('street', 'city', )
+    list_editable = ('opening_time', 'closing_time',)
 
 
 admin.site.register(City, AdminCity)
