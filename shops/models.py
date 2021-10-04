@@ -1,3 +1,6 @@
+import datetime
+
+
 from django.db import models
 
 
@@ -33,6 +36,13 @@ class Shop(models.Model):
                              null=True,
                              verbose_name='Город',
                              )
+
+    @property
+    def open(self):
+        print(self.opening_time)
+        print(self.closing_time)
+        print(datetime.datetime.now().time())
+        return int(self.opening_time < datetime.datetime.now().time() < self.closing_time)
 
     def __str__(self):
         return self.name
