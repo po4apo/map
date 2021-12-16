@@ -8,8 +8,12 @@ from shops.serializers import ShopSerializer, StreetSerializer, CitySerializer
 from .paginators import ResultsSetPagination
 
 
-class CreateShop(CreateAPIView):
+class ShopListViewSet(generics.ListAPIView, CreateAPIView):
+    queryset = Shop.objects.all().order_by('name')
     serializer_class = ShopSerializer
+    filter_backends = [MyFilter]
+    filterset_fields = ['street_id', 'city_id']
+    pagination_class = ResultsSetPagination
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -18,15 +22,6 @@ class CreateShop(CreateAPIView):
         headers = self.get_success_headers(serializer.data)
 
         return Response(f'id:{(serializer.data["id"])}', status=status.HTTP_201_CREATED, headers=headers)
-
-
-class ShopListViewSet(generics.ListAPIView):
-    queryset = Shop.objects.all().order_by('name')
-    serializer_class = ShopSerializer
-    filter_backends = [MyFilter]
-    filterset_fields = ['street_id', 'city_id']
-    pagination_class = ResultsSetPagination
-
 
 class CityViewSet(generics.ListAPIView):
     queryset = City.objects.all().order_by('name')

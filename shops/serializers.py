@@ -13,6 +13,11 @@ class ShopSerializer(serializers.ModelSerializer):
         model = Shop
         fields = ["name", "num_of_house", "opening_time","closing_time","street","city","open"]
 
+    def validate_name(self, value):
+        if not value.isalpha():
+            raise serializers.ValidationError("Name must be str")
+        return value
+
 
 class ShopSerializerDetal(serializers.ModelSerializer):
     city = serializers.StringRelatedField(read_only=True)
