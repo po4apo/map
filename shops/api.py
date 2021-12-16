@@ -1,38 +1,11 @@
 from rest_framework.generics import CreateAPIView
-from rest_framework.mixins import CreateModelMixin
 from rest_framework.response import Response
 from rest_framework import status, viewsets, generics
-from rest_framework.decorators import api_view
 
 from .filters import MyFilter
 from .models import Shop, Street, City
-from shops.serializers import ShopSerializer, StreetSerializer, CitySerializer, ShopSerializerDetal
-from django_filters.rest_framework import DjangoFilterBackend
-
-
-
-class CityViewSet(viewsets.ViewSet):
-    # todo: Добавить пагинацию
-    def list(self, request):
-        """
-        Get list with cities
-        """
-        queryset = City.objects.all()
-        serializer = CitySerializer(queryset, many=True)
-        return Response(serializer.data)
-
-
-class StreetsInTheCurrentCityViewSet(viewsets.ViewSet):
-    """
-    Get list all streets in the current city.
-    """
-    def list(self, request, city_id = None):
-        streets = Street.objects.filter(city_id=city_id)
-        if streets.exists():
-            serializer = StreetSerializer(streets, many=True)
-            return Response(serializer.data)
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+from shops.serializers import ShopSerializer, StreetSerializer, CitySerializer
+from .paginators import ResultsSetPagination
 
 
 class CreateShop(CreateAPIView):
@@ -47,23 +20,28 @@ class CreateShop(CreateAPIView):
         return Response(f'id:{(serializer.data["id"])}', status=status.HTTP_201_CREATED, headers=headers)
 
 
-# class ShopListViewSet(viewsets.ViewSet):
-#
-#     def list(self, request):
-#         print(request.GET)
-#         params = {'street__id': request.GET.get('street', None),
-#                   'city_id': request.GET.get('city', None),
-#         }
-#         streets = Shop.objects.filter(**params)
-#         if streets.exists():
-#             serializer = StreetSerializer(streets, many=True)
-#             return Response(serializer.data)
-#         else:
-#             return Response(status=status.HTTP_404_NOT_FOUND)
-
-
 class ShopListViewSet(generics.ListAPIView):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
     filter_backends = [MyFilter]
     filterset_fields = ['street_id', 'city_id']
+    pagination_class = ResultsSetPagination
+
+
+class CityViewSet(generics.ListAPIView):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
+    pagination_class = ResultsSetPagination
+
+
+class StreetsInTheCurrentCityViewSet(generics.ListAPIView):
+    """
+    Get list all streets in the current city.
+    """
+    queryset = Street.objects.all()
+    serializer_class = StreetSerializer
+    pagination_class = ResultsSetPagination
+
+    def get(self, request, city_id = None, *args, **kwargs):
+        self.queryset = self.get_queryset().filter(city_id=city_id)
+        return self.list(request, *args, **kwargs)

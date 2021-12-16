@@ -3,7 +3,7 @@ from .models import City, Street, Shop
 
 
 class AdminCity(admin.ModelAdmin):
-    list_display = ('name', )
+    list_display = ('pk','name', )
 
 
 class AdminStreet(admin.ModelAdmin):
