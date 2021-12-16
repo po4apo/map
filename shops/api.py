@@ -1,77 +1,69 @@
+from rest_framework.generics import CreateAPIView
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets, generics
 from rest_framework.decorators import api_view
-from shops.models import Shop, Street, City
+
+from .filters import MyFilter
+from .models import Shop, Street, City
 from shops.serializers import ShopSerializer, StreetSerializer, CitySerializer, ShopSerializerDetal
+from django_filters.rest_framework import DjangoFilterBackend
 
 
-@api_view(['GET'])
-def city_list(request):
-    """
-    List all cities.
-    """
-    if request.method == 'GET':
-        cities = City.objects.all()
-        serializer = CitySerializer(cities, many=True)
+
+class CityViewSet(viewsets.ViewSet):
+    # todo: Добавить пагинацию
+    def list(self, request):
+        """
+        Get list with cities
+        """
+        queryset = City.objects.all()
+        serializer = CitySerializer(queryset, many=True)
         return Response(serializer.data)
 
 
-@api_view(['GET'])
-def all_streets_in_the_current_city(request, city_id):
+class StreetsInTheCurrentCityViewSet(viewsets.ViewSet):
     """
-    List all streets in the current city.
+    Get list all streets in the current city.
     """
-    try:
+    def list(self, request, city_id = None):
         streets = Street.objects.filter(city_id=city_id)
-    except Street.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = StreetSerializer(streets, many=True)
-        return Response(serializer.data)
-
-
-@api_view(['GET', 'POST'])
-def add_shop(request):
-    """
-    List shops filtered on params.
-    If param isn't valid then this param is ignored.
+        if streets.exists():
+            serializer = StreetSerializer(streets, many=True)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-    Example JSON for POST:
-    {
-    "name":"Магнит",
-    "num_of_house": 30,
-    "opening_time": "04:00:00",
-    "closing_time": "20:00:00",
-    "street": 1,
-    "city": 2
-    }
-    """
-    try:
-        # ?street=&city=&open=0/1
-        # get_params
-        params = {'street_id': request.GET.get('street', None),
-                  'city_id': request.GET.get('city', None),
-                  }
-        user_param_for_field_open = request.GET.get('open')
-        # normalize_data
-        valid_params = {k: v for k, v in params.items() if (v is not None and v.isdigit())}
-        # get_data_from_db
-        shops = Shop.objects.filter(**valid_params)
-        if user_param_for_field_open is not None and user_param_for_field_open.isdigit():
-            shops = [x for x in shops if (x.open == int(user_param_for_field_open))]
+class CreateShop(CreateAPIView):
+    serializer_class = ShopSerializer
 
-    except Shop.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
 
-    if request.method == 'GET':
-        serializer = ShopSerializerDetal(shops, many=True)
-        return Response(serializer.data)
+        return Response(f'id:{(serializer.data["id"])}', status=status.HTTP_201_CREATED, headers=headers)
 
-    elif request.method == 'POST':
-        serializer = ShopSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+
+# class ShopListViewSet(viewsets.ViewSet):
+#
+#     def list(self, request):
+#         print(request.GET)
+#         params = {'street__id': request.GET.get('street', None),
+#                   'city_id': request.GET.get('city', None),
+#         }
+#         streets = Shop.objects.filter(**params)
+#         if streets.exists():
+#             serializer = StreetSerializer(streets, many=True)
+#             return Response(serializer.data)
+#         else:
+#             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class ShopListViewSet(generics.ListAPIView):
+    queryset = Shop.objects.all()
+    serializer_class = ShopSerializer
+    filter_backends = [MyFilter]
+    filterset_fields = ['street_id', 'city_id']
