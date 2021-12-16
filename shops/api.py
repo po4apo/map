@@ -21,7 +21,7 @@ class CreateShop(CreateAPIView):
 
 
 class ShopListViewSet(generics.ListAPIView):
-    queryset = Shop.objects.all()
+    queryset = Shop.objects.all().order_by('name')
     serializer_class = ShopSerializer
     filter_backends = [MyFilter]
     filterset_fields = ['street_id', 'city_id']
@@ -29,7 +29,7 @@ class ShopListViewSet(generics.ListAPIView):
 
 
 class CityViewSet(generics.ListAPIView):
-    queryset = City.objects.all()
+    queryset = City.objects.all().order_by('name')
     serializer_class = CitySerializer
     pagination_class = ResultsSetPagination
 
@@ -38,7 +38,7 @@ class StreetsInTheCurrentCityViewSet(generics.ListAPIView):
     """
     Get list all streets in the current city.
     """
-    queryset = Street.objects.all()
+    queryset = Street.objects.all().order_by('name')
     serializer_class = StreetSerializer
     pagination_class = ResultsSetPagination
 
