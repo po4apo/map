@@ -1,5 +1,4 @@
 import datetime
-from django.db.models import Func, F
 
 from django.db import models
 
