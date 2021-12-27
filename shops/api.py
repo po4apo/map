@@ -1,27 +1,19 @@
-from rest_framework.generics import CreateAPIView
-from rest_framework.response import Response
-from rest_framework import status, viewsets, generics
+from rest_framework import generics
+from rest_framework.viewsets import GenericViewSet
 
+from .serializers import ShopSerializer, StreetSerializer, CitySerializer
 from .filters import MyFilter
 from .models import Shop, Street, City
-from shops.serializers import ShopSerializer, StreetSerializer, CitySerializer
 from .paginators import ResultsSetPagination
 
 
-class ShopListViewSet(generics.ListAPIView, CreateAPIView):
+class ShopListViewSet(GenericViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = Shop.objects.all().order_by('name')
     serializer_class = ShopSerializer
     filter_backends = [MyFilter]
     filterset_fields = ['street_id', 'city_id']
     pagination_class = ResultsSetPagination
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(f'id:{(serializer.data["id"])}', status=status.HTTP_201_CREATED, headers=headers)
 
 class CityViewSet(generics.ListAPIView):
     queryset = City.objects.all().order_by('name')
@@ -37,6 +29,6 @@ class StreetsInTheCurrentCityViewSet(generics.ListAPIView):
     serializer_class = StreetSerializer
     pagination_class = ResultsSetPagination
 
-    def get(self, request, city_id = None, *args, **kwargs):
+    def get(self, request, city_id=None, *args, **kwargs):
         self.queryset = self.get_queryset().filter(city_id=city_id)
         return self.list(request, *args, **kwargs)

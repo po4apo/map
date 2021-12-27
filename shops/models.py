@@ -7,13 +7,7 @@ from django.db import models
 # Create your models here.
 
 
-class NewManager(models.Manager):
 
-    def get_queryset(self):
-        """Overrides the models.Manager method"""
-        qs = (super(NewManager, self).get_queryset()).annotate(open = F('name'))
-        print(list(qs))
-        return qs
 
 
 class Shop(models.Model):
@@ -39,16 +33,9 @@ class Shop(models.Model):
                              verbose_name='Город',
                              )
 
-
-
     @property
     def open(self):
-        print(self.opening_time)
-        print(self.closing_time)
-        print(datetime.datetime.now().time())
         return int(self.opening_time < datetime.datetime.now().time() < self.closing_time)
-
-
 
     def __str__(self):
         return self.name

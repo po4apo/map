@@ -15,7 +15,7 @@ class ShopSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         if not value.isalpha():
-            raise serializers.ValidationError("Name must be str")
+            raise serializers.ValidationError("Name must only be letters ")
         return value
 
 
